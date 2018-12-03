@@ -30,7 +30,7 @@ class APICaller
   def interpretresponse()
 
     if @response == "[]"
-      puts "it is empty"
+      puts "No history of abuse"
     elsif @response == "No request made"
       puts "No request made"
     else

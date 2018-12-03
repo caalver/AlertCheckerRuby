@@ -5,10 +5,18 @@ class Test
   require 'hashie'
   require 'json'
   require './threat_dictionary'
+  require './api_caller'
+  require './query_builder'
 
 
   #create/load threatdictionary
   threatdictionary = ThreatDictionary.new
+
+  #create apicaller
+  apicaller = APICaller.new
+
+  #create querybuilder
+  querybuilder = QueryBuilder.new
 
   #define elasticsearch client
   client = Elasticsearch::Client.new url: 'http://192.168.5.223:9200', log: true
@@ -20,8 +28,8 @@ class Test
 
   #The default max number of results returned in 10, to get more you must specify results size in the query
    #can use jbuilder to build the request json
-   query = Jbuilder.encode do |json|
-     json.size 500
+  query = Jbuilder.encode do |json|
+     json.size 2
        json.query do
          json.exists do
            json.field "event_time"
@@ -29,8 +37,7 @@ class Test
        end
    end
 
-
-  #send request to the client.
+    #send request to the client.
   output = client.search index: 'logstash-2018.11.25*', body: query
 
   #output =  client.search index: 'logstash-2018.11.25*', body: { query: { match: {event:"APACHE" } } }
@@ -48,20 +55,30 @@ class Test
     puts value._source.event
     #check if the event is present in the threat dictionary
     key = value._source.event
-    puts threatdictionary.checkKey(key)
-    puts threatdictionary.lookupviakey(key)
+    if threatdictionary.checkKey(key)
+      emailtext = threatdictionary.lookupviakey(key)
+
+      #get the ip from the event.
+      ip = value._source.src_ip
+
+      # "do ip lookup"
+      #a delay is implemented so as not to be banned by abusedb in the event of multiple events
+      sleep(1)
+      responsejson = apicaller.makeapicall(ip)
+      apicaller.interpretresponse
+
+      
+      networkcheckquery = querybuilder.networkCheck(ip)
+      networkcheckoutput = client.search index: 'logstash-2018.11.25*', body: networkcheckquery
+
+
+      puts networkcheckoutput
+    end
 
   end
 
   #below is the same as aobe.
-  outputTotal = output["hits"]["total"]
-  puts outputTotal
-
-
-  #check if a response event is present in the threatdictionary
-
-  #pretty print
-  #pp output
-
+  #outputTotal = output["hits"]["total"]
+  #puts outputTotal
 
 end

@@ -7,21 +7,26 @@ class Test
   require './threat_dictionary'
   require './api_caller'
   require './query_builder'
+  require './networkchecker'
 
 
   #create/load threatdictionary
-  threatdictionary = ThreatDictionary.new
+  $threatdictionary = ThreatDictionary.new
+
 
   #create apicaller
-  apicaller = APICaller.new
+  $apicaller = APICaller.new
 
   #create querybuilder
-  querybuilder = QueryBuilder.new
+  $querybuilder = QueryBuilder.new
+
+  #create networkchecker
+  $networkchecker = Networkchecker.new
 
   #define elasticsearch client
-  client = Elasticsearch::Client.new url: 'http://192.168.5.223:9200', log: true
-  client.transport.reload_connections!
-  client.cluster.health
+  $client = Elasticsearch::Client.new url: 'http://192.168.5.223:9200', log: true
+  $client.transport.reload_connections!
+  $client.cluster.health
 
 
  # output = client.search q: 'title:star&pretty'
@@ -38,7 +43,7 @@ class Test
    end
 
     #send request to the client.
-  output = client.search index: 'logstash-2018.11.25*', body: query
+  output = $client.search index: 'logstash-2018.11.25*', body: query
 
   #output =  client.search index: 'logstash-2018.11.25*', body: { query: { match: {event:"APACHE" } } }
 
@@ -55,8 +60,8 @@ class Test
     puts value._source.event
     #check if the event is present in the threat dictionary
     key = value._source.event
-    if threatdictionary.checkKey(key)
-      emailtext = threatdictionary.lookupviakey(key)
+    if $threatdictionary.checkKey(key)
+      emailtext = $threatdictionary.lookupviakey(key)
 
       #get the ip from the event.
       ip = value._source.src_ip
@@ -64,15 +69,18 @@ class Test
       # "do ip lookup"
       #a delay is implemented so as not to be banned by abusedb in the event of multiple events
       sleep(1)
-      responsejson = apicaller.makeapicall(ip)
-      apicaller.interpretresponse
-
-      
-      networkcheckquery = querybuilder.networkCheck(ip)
-      networkcheckoutput = client.search index: 'logstash-2018.11.25*', body: networkcheckquery
+      responsejson = $apicaller.makeapicall(ip)
+      $apicaller.interpretresponse
 
 
-      puts networkcheckoutput
+      $networkchecker.conductnetworkcheck(ip)
+      #networkcheckquery = @querybuilder.networkCheckTest(ip)
+      #networkcheckoutput = @client.search index: 'logstash-2018.11.25*', body: networkcheckquery
+
+
+      #puts networkcheckoutput
+
+      #clear variables ready for next hit.
     end
 
   end

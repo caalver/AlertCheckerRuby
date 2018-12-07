@@ -45,9 +45,13 @@ class APICaller
 
     json = JSON.parse(@response)
 
-    @country = json[0]["country"]
-    @iswhitelisted = json[0]["isWhitelisted"]
-    @abuseconfidencescore = json[0]["abuseConfidenceScore"]
+    #@country = json[0]["country"]
+    #@iswhitelisted = json[0]["isWhitelisted"]
+    #@abuseconfidencescore = json[0]["abuseConfidenceScore"]
+
+    @country = json["country"]
+    @iswhitelisted = json["isWhitelisted"]
+    @abuseconfidencescore = json["abuseConfidenceScore"]
 
   end
 

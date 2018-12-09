@@ -13,6 +13,8 @@ class Test
   #create/load threatdictionary
   $threatdictionary = ThreatDictionary.new
 
+  #create emailbuilder
+  $emailhandler = EmailHandler.new
 
   #create apicaller
   $apicaller = APICaller.new
@@ -33,16 +35,18 @@ class Test
 
   #The default max number of results returned in 10, to get more you must specify results size in the query
    #can use jbuilder to build the request json
-  query = Jbuilder.encode do |json|
-     json.size 2
-       json.query do
-         json.exists do
-           json.field "event_time"
-         end
-       end
-   end
+  #query = Jbuilder.encode do |json|
+  #   json.size 2
+  #     json.query do
+  #       json.exists do
+  #         json.field "event_time"
+  #       end
+  #     end
+  #end
 
-    #send request to the client.
+  query = $querybuilder.testQuery
+
+  #send request to the client.
   output = $client.search index: 'logstash-2018.11.25*', body: query
 
   #output =  client.search index: 'logstash-2018.11.25*', body: { query: { match: {event:"APACHE" } } }
@@ -72,16 +76,23 @@ class Test
       responsejson = $apicaller.makeapicall(ip)
       $apicaller.interpretresponse
 
-
+      #if there are results conduct network check-
       $networkchecker.conductnetworkcheck(ip)
-      #networkcheckquery = @querybuilder.networkCheckTest(ip)
-      #networkcheckoutput = @client.search index: 'logstash-2018.11.25*', body: networkcheckquery
 
+      #query elasticsearch for previous IPS events involving the source IP
 
-      #puts networkcheckoutput
+      #add contents to email body output array
+      $emailhandler.addIPSemailbodycontent(value)
+
 
       #clear variables ready for next hit.
+    else
+
+      #Alert SOC that new IPS event has been detected, it will need to be added to the threat dictionary.
+
     end
+
+    #send email
 
   end
 

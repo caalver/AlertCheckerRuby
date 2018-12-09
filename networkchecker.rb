@@ -17,7 +17,7 @@ class Networkchecker
 
     interpretresponse(networkcheckoutput)
 
-    end
+  end
 
   def interpretresponse(networkcheckoutput)
 
@@ -30,35 +30,32 @@ class Networkchecker
       #put all datefields into array
       #
       if networkcheckoutput["hits"]["total"] > 0
-        
-        mash = Hashie::Mash.new networkcheckoutput
-        #networkcheckoutput.hits.hits.each do |value|
-        #this creates a dataset of unique values based on a specified field. Need to break the Date out of the datetime field to use.
-          seen = Set.new
-          mash.hits.hits.inject([]) do |kept, record|
-
-            #brokenfield = record._source.src_ip.match(/\w++ [^_]\w/)
-
-            unless seen.include?(record._source.src_ip)
-              kept << record
-              seen << record._source.src_ip
-            end
-            kept
-          end
-
+        puts "A history of communcation in the last 30 days has been found."
       end
 
     end
 
   end
 
-  def uniq(networkcheckout)
+
+
+# dont do this it will be too extensive for large dataset
+  def uniq(networkcheckoutput)
+    mash = Hashie::Mash.new networkcheckoutput
+    #networkcheckoutput.hits.hits.each do |value|
+    #
+
+    #this creates a dataset of unique values based on a specified field. Need to break the Date out of the timestamp field to use.
     seen = Set.new
-    networkcheckout.inject([]) do |kept, record|
-        unless seen.include?(record.id)
-          kept << record
-          seen << record.id
-        end
+    mash.hits.hits.inject([]) do |kept, record|
+
+
+      #brokenfield = record._source.src_ip.match(/\w++ [^_]\w/)
+
+      unless seen.include?(record._source.src_ip)
+        kept << record
+        seen << record._source.src_ip
+      end
       kept
     end
   end

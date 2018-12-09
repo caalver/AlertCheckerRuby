@@ -18,10 +18,15 @@ class API_caller_test
 
   apicaller.interpretresponse
 
+  amendedjson = apicaller.appendvariablestohitjson(responsejson)
+
   #print variables
   puts apicaller.getabuseconfidencescore
   puts apicaller.getcountry
   puts apicaller.getiswhitelisted
+
+
+  puts amendedjson
 
 
 end

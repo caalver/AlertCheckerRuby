@@ -9,8 +9,6 @@ class QueryBuilder
     twohoursago = DateTime.now - (2/24.0)
     @twohoursago = twohoursago.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    #puts currenttime
-    #puts twohoursago
   end
 
   def buildQuery
@@ -24,7 +22,13 @@ class QueryBuilder
     query = JSON.parse(query)
   end
 
-  def networkCheck(ip)
+  def networkCheckTest(ip)
+    #The network check looks for previous logs including the source ip from the past 30 days, not including the present day.
+    #The exists term can be removed in practice.
+
+    #currentdate =  DateTime.now.strftime('%Y-%m-%dT%H:%M:%SZ')
+    yesterday = (DateTime.now - 1).strftime('%Y-%m-%dT%H:%M:%SZ')
+    monthago = (DateTime.now - 30).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     #below is the correct syntax for a query including a date range and a search for a term over all fields.
     query = '{ "query": {
@@ -33,8 +37,8 @@ class QueryBuilder
                           {
                               "range": {
                                   "@timestamp": {
-                                      "gte": "' + @twohoursago + '",
-                                      "lte": "' + @currenttime + '"
+                                      "gte": "' + monthago + '",
+                                      "lte": "' + yesterday  + '"
                                   }
                               }
                           },
@@ -55,40 +59,13 @@ class QueryBuilder
 
   end
 
-  def networkCheckTest(ip)
-
-    #below is the correct syntax for a query including a date range and a search for a term over all fields. The
-    query = '{ "query": {
-                  "bool": {
-                      "must": [
-                          {
-                              "range": {
-                                  "@timestamp": {
-                                      "gte": "2018-11-25T21:00:00Z",
-                                      "lte": "2018-11-25T21:40:00Z"
-                                  }
-                              }
-                          },
-                          {
-                              "query_string": {
-                                  "query": "' + ip + '"
-                              }
-                          },
-                          {
-                              "exists": { "field" : "event_time" }
-                          }
-                      ]
-                  }
-              }
-          }'
-
-    query = JSON.parse(query)
-
-  end
-
-  def AldermoreIPSLookup
+  def AldermoreIPSLookup(ip)
 
     #What the aldermoreIPS query will look like - filtered based on the syslog_program
+
+    #currentdate =  DateTime.now.strftime('%Y-%m-%dT%H:%M:%SZ')
+    yesterday = (DateTime.now - 1).strftime('%Y-%m-%dT%H:%M:%SZ')
+    monthago = (DateTime.now - 30).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     query = '{  "query": {
                   "bool": {
@@ -96,7 +73,7 @@ class QueryBuilder
                       {
                         "query_string":
                           {
-                            "query": "123.249.13.4"
+                            "query": "' + ip + '"
                           }
                       }
                      ],
@@ -105,8 +82,8 @@ class QueryBuilder
                       { "range":
                         { "@timestamp":
                            {
-                             "gte": "2018-11-25T21:00:00Z",
-                             "lte": "2018-11-25T21:40:00Z"
+                             "gte": "' + monthago + '",
+                             "lte": "' + yesterday + '"
                            }
                          }
                       }

@@ -45,13 +45,24 @@ class APICaller
 
     json = JSON.parse(@response)
 
-    #@country = json[0]["country"]
-    #@iswhitelisted = json[0]["isWhitelisted"]
-    #@abuseconfidencescore = json[0]["abuseConfidenceScore"]
+    if json.length > 0
+      @country = json[0]["country"]
+      @iswhitelisted = json[0]["isWhitelisted"]
+      @abuseconfidencescore = json[0]["abuseConfidenceScore"]
+    else
+      @country = json["country"]
+      @iswhitelisted = json["isWhitelisted"]
+      @abuseconfidencescore = json["abuseConfidenceScore"]
+    end
+  end
 
-    @country = json["country"]
-    @iswhitelisted = json["isWhitelisted"]
-    @abuseconfidencescore = json["abuseConfidenceScore"]
+  #fix this! - want to be able to append the variables to the json value so it can be passed to email handler with all info
+  def appendvariablestohitjson(json)
+
+    rb_hash = JSON.parse(json)
+    rb_hash[0]["Country"] << { Country: @country }
+
+    json
 
   end
 

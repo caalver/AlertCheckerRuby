@@ -12,13 +12,34 @@ class QueryBuilder
   end
 
   def buildQuery
-    query = '{ size: 20 { "query": { "range": { "@timestamp": { "gte":""' + @twohoursago + '", "lte": ' + @currenttime + ' } } } } }'
+    query = '{ "size"": 20, "query": { "range": { "@timestamp": { "gte":""' + @twohoursago + '", "lte": ' + @currenttime + ' } } } }'
     query = JSON.parse(query)
   end
 
   def testQuery
     #To specify a time frame use a range on the @timestamp field.
-    query = '{ size: 20 { "query": { "range": { "@timestamp": { "gte": "2018-11-25T21:30:00Z", "lte": "2018-11-25T21:40:00Z" } } } } }'
+    #query = '{ "size": 20, "query": { "range": { "@timestamp": { "gte": "2018-11-25T21:30:00Z", "lte": "2018-11-25T21:40:00Z" } } } }'
+
+    query = '{ "size": 6, "query": {
+                  "bool": {
+                      "must": [
+                          {
+                              "range": {
+                                  "@timestamp": {
+                                      "gte": "2018-11-25T21:30:00Z",
+                                      "lte": "2018-11-25T21:40:00Z"
+                                  }
+                              }
+                          },
+                          {
+                              "exists": { "field" : "event_time" }
+                          }
+                      ]
+                  }
+              }
+          }'
+
+
     query = JSON.parse(query)
   end
 

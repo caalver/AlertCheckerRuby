@@ -13,7 +13,22 @@ class ThreatDictionary
 
   end
 
+  def appendemailtexttohithash(hash)
+
+    hash[:emailtext]  = @emailtext
+    hash
+
+  end
+
+  def setemailtext(key)
+
+    @emailtext = @dictionary[key]
+
+  end
+
   def initialize
+    @emailtext = "Event not present in event dictionary."
+
     @dictionary = {
          "SERVER-APACHE Apache Struts remote code execution attempt" => "This is some placeholder text1",
          "INDICATOR-SCAN UPnP service discover attempt" => "This is some placeholder text2",

@@ -8,7 +8,7 @@ class Test
   require './api_caller'
   require './query_builder'
   require './networkchecker'
-
+  require './email_handler'
 
   #create/load threatdictionary
   $threatdictionary = ThreatDictionary.new
@@ -17,7 +17,7 @@ class Test
   $emailhandler = EmailHandler.new
 
   #create apicaller
-  $apicaller = APICaller.new
+  $abuseDBtool = APICaller.new
 
   #create querybuilder
   $querybuilder = QueryBuilder.new
@@ -53,19 +53,16 @@ class Test
 
   ##accessing response hash
   mash = Hashie::Mash.new output
-
   hits = mash.hits.total
+  #puts mash.hits.hits[0]._source.event
 
-  puts mash.hits.hits[0]._source.event
-
-  #each result document is saved in hits.hits._source
+  #each result document is located at hits.hits._source
   mash.hits.hits.each do |value|
 
     puts value._source.event
     #check if the event is present in the threat dictionary
     key = value._source.event
     if $threatdictionary.checkKey(key)
-      emailtext = $threatdictionary.lookupviakey(key)
 
       #get the ip from the event.
       ip = value._source.src_ip
@@ -73,28 +70,37 @@ class Test
       # "do ip lookup"
       #a delay is implemented so as not to be banned by abusedb in the event of multiple events
       sleep(1)
-      responsejson = $apicaller.makeapicall(ip)
-      $apicaller.interpretresponse
+      $abuseDBtool.makeapicall(ip)
+      istheipmalicious = $abuseDBtool.interpretresponse()
 
-      #if there are results conduct network check-
-      $networkchecker.conductnetworkcheck(ip)
+      if istheipmalicious
+        value = $abuseDBtool.appendvariablestohithash(value)
 
-      #query elasticsearch for previous IPS events involving the source IP
+        $networkchecker.conductnetworkcheck(ip)
+        value = $networkchecker.appendnetworkcheckresultohithash(value)
 
-      #add contents to email body output array
-      $emailhandler.addIPSemailbodycontent(value)
+        #add the email text to the hash
+        $threatdictionary.setemailtext(key)
+        $threatdictionary.appendemailtexttohithash(value)
 
+        #query elasticsearch for previous IPS events involving the source IP
+        #still need to write this query - add it into the network checker
+        #add contents to email body output array
+        $emailhandler.addIPSemailbodycontent(value)
+      end
 
       #clear variables ready for next hit.
     else
-
       #Alert SOC that new IPS event has been detected, it will need to be added to the threat dictionary.
 
     end
 
-    #send email
-
   end
+
+  #build email
+  $emailhandler.buildIPSEmail()
+  #send email
+  $emailhandler.sendemailtoconsole
 
   #below is the same as aobe.
   #outputTotal = output["hits"]["total"]

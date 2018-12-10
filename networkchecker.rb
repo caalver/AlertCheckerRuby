@@ -8,6 +8,13 @@ class Networkchecker
   require './api_caller'
   require './query_builder'
 
+  def initialize
+
+    @networkcheckresult = "No request made"
+
+  end
+
+
   def conductnetworkcheck(ip)
 
     #create network check query using the query builder
@@ -23,6 +30,7 @@ class Networkchecker
 
     if networkcheckoutput  == "[]"
       puts "No history of communication"
+      @networkcheckresult = "No history of communication"
     elsif networkcheckoutput  == "No request made"
       puts "No request made"
     else
@@ -30,20 +38,25 @@ class Networkchecker
       #put all datefields into array
       #
       if networkcheckoutput["hits"]["total"] > 0
-        puts "A history of communcation in the last 30 days has been found."
+        puts "A history of communication in the last 30 days has been found."
+        @networkcheckresult = "a history of communication in the last 30 days"
       end
 
     end
 
   end
 
+  def appendnetworkcheckresultohithash(hash)
 
+    hash[:networkcheckresult]  = @networkcheckresult
+    hash
+
+  end
 
 # dont do this it will be too extensive for large dataset
   def uniq(networkcheckoutput)
     mash = Hashie::Mash.new networkcheckoutput
     #networkcheckoutput.hits.hits.each do |value|
-    #
 
     #this creates a dataset of unique values based on a specified field. Need to break the Date out of the timestamp field to use.
     seen = Set.new
